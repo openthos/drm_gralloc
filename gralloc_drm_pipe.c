@@ -378,11 +378,9 @@ static void pipe_destroy(struct gralloc_drm_drv_t *drv)
 #include "radeon/drm/radeon_drm_public.h"
 #include "r300/r300_public.h"
 /* for r600 */
-#include "radeon/drm/radeon_winsys.h"
 #include "r600/r600_public.h"
 /* for vmwgfx */
 #include "svga/drm/svga_drm_public.h"
-#include "svga/svga_winsys.h"
 #include "svga/svga_public.h"
 /* for debug */
 #include "target-helpers/inline_debug_helper.h"
