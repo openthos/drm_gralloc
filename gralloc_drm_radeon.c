@@ -353,7 +353,7 @@ static int radeon_init_tile_config(struct radeon_info *info)
 
 	memset(&ginfo, 0, sizeof(ginfo));
 	ginfo.request = RADEON_INFO_TILING_CONFIG;
-	ginfo.value = (long) &val;
+	ginfo.value = (uintptr_t) &val;
 	ret = drmCommandWriteRead(info->fd, DRM_RADEON_INFO,
 			&ginfo, sizeof(ginfo));
 	if (ret)
@@ -465,7 +465,7 @@ static int radeon_probe(struct radeon_info *info)
 
 	memset(&kinfo, 0, sizeof(kinfo));
 	kinfo.request = RADEON_INFO_DEVICE_ID;
-	kinfo.value = (long) &info->chipset;
+	kinfo.value = (uintptr_t) &info->chipset;
 	err = drmCommandWriteRead(info->fd, DRM_RADEON_INFO, &kinfo, sizeof(kinfo));
 	if (err) {
 		ALOGE("failed to get device id");
