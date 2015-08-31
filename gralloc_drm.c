@@ -205,7 +205,7 @@ static struct gralloc_drm_bo_t *validate_handle(buffer_handle_t _handle,
 		return NULL;
 
 	/* the buffer handle is passed to a new process */
-	if (unlikely(handle->data_owner != gralloc_drm_pid)) {
+	if (unlikely(handle->data_owner != gralloc_drm_get_pid())) {
 		struct gralloc_drm_bo_t *bo;
 
 		/* check only */
