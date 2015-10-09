@@ -25,7 +25,7 @@
 #define _GRALLOC_DRM_HANDLE_H_
 
 #include <cutils/native_handle.h>
-#include <system/graphics.h>
+#include "gralloc_drm_formats.h"
 
 #ifdef __cplusplus
 extern "C" {
