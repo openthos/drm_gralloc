@@ -36,9 +36,6 @@ struct gralloc_drm_bo_t;
 struct gralloc_drm_handle_t {
 	native_handle_t base;
 
-#define GRALLOC_DRM_HANDLE_MAGIC 0x12345678
-#define GRALLOC_DRM_HANDLE_NUM_INTS 10
-#define GRALLOC_DRM_HANDLE_NUM_FDS 0
 	int magic;
 
 	int width;
@@ -54,6 +51,12 @@ struct gralloc_drm_handle_t {
 	int data_owner; /* owner of data (for validation) */
 	struct gralloc_drm_bo_t *data; /* pointer to struct gralloc_drm_bo_t */
 };
+
+#define GRALLOC_DRM_HANDLE_MAGIC 0x12345678
+#define GRALLOC_DRM_HANDLE_NUM_FDS 0
+#define GRALLOC_DRM_HANDLE_NUM_INTS (						\
+	((sizeof(struct gralloc_drm_handle_t) - sizeof(native_handle_t))/sizeof(int))	\
+	 - GRALLOC_DRM_HANDLE_NUM_FDS)
 
 static inline struct gralloc_drm_handle_t *gralloc_drm_handle(buffer_handle_t _handle)
 {
