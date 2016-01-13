@@ -36,6 +36,9 @@ struct gralloc_drm_bo_t;
 struct gralloc_drm_handle_t {
 	native_handle_t base;
 
+	/* file descriptors */
+	int prime_fd;
+
 	int magic;
 
 	int width;
@@ -69,8 +72,12 @@ static inline struct gralloc_drm_handle_t *gralloc_drm_handle(buffer_handle_t _h
 	if (handle && (handle->base.version != sizeof(handle->base) ||
 	               handle->base.numInts != GRALLOC_DRM_HANDLE_NUM_INTS ||
 	               handle->base.numFds != GRALLOC_DRM_HANDLE_NUM_FDS ||
-	               handle->magic != GRALLOC_DRM_HANDLE_MAGIC))
+	               handle->magic != GRALLOC_DRM_HANDLE_MAGIC)) {
+		ALOGE("invalid handle: version=%d, numInts=%d, numFds=%d, magic=%x",
+			handle->base.version, handle->base.numInts,
+			handle->base.numFds, handle->magic);
 		handle = NULL;
+	}
 
 	return handle;
 }

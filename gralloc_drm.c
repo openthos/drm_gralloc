@@ -214,7 +214,11 @@ static struct gralloc_drm_bo_t *validate_handle(buffer_handle_t _handle,
 			return NULL;
 
 		/* create the struct gralloc_drm_bo_t locally */
-		if (handle->name)
+#ifdef DMABUF
+		if (handle->prime_fd >= 0)
+#else
+		if (handle->name || handle->prime_fd >= 0)
+#endif
 			bo = drm->drv->alloc(drm->drv, handle);
 		else /* an invalid handle */
 			bo = NULL;
@@ -371,6 +375,12 @@ int gralloc_drm_get_gem_handle(buffer_handle_t _handle)
 {
 	struct gralloc_drm_handle_t *handle = gralloc_drm_handle(_handle);
 	return (handle) ? handle->name : 0;
+}
+
+int gralloc_drm_get_prime_fd(buffer_handle_t _handle)
+{
+	struct gralloc_drm_handle_t *handle = gralloc_drm_handle(_handle);
+	return (handle) ? dup(handle->prime_fd) : -1;
 }
 
 /*
