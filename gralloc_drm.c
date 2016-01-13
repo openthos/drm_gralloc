@@ -69,6 +69,7 @@ init_drv_from_fd(int fd)
 
 	if (version->name) {
 #ifdef ENABLE_PIPE
+        ALOGI("find driver for pipe%s", version->name);
 		drv = gralloc_drm_drv_create_for_pipe(fd, version->name);
 		if (drv) {
 			ALOGI("create pipe for driver %s", version->name);

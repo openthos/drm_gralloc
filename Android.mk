@@ -31,6 +31,7 @@ vmwgfx_drivers := vmwgfx
 
 valid_drivers := \
 	prebuilt \
+	virgl \
 	$(freedreno_drivers) \
 	$(intel_drivers) \
 	$(radeon_drivers) \
@@ -45,7 +46,7 @@ $(warning invalid GPU drivers: $(invalid_drivers))
 DRM_GPU_DRIVERS := $(filter-out $(invalid_drivers), $(DRM_GPU_DRIVERS))
 endif
 
-ifneq ($(filter $(vmwgfx_drivers), $(DRM_GPU_DRIVERS)),)
+ifneq ($(filter $(vmwgfx_drivers) virgl, $(DRM_GPU_DRIVERS)),)
 DRM_USES_PIPE := true
 else
 DRM_USES_PIPE := false
@@ -140,6 +141,16 @@ LOCAL_STATIC_LIBRARIES += \
 	libmesa_winsys_svga
 LOCAL_C_INCLUDES += \
 	external/mesa/src/gallium/drivers/svga/include
+endif
+
+ifneq ($(filter virgl, $(DRM_GPU_DRIVERS)),)
+LOCAL_CFLAGS += -DENABLE_PIPE_VIRGL
+LOCAL_STATIC_LIBRARIES += \
+	libmesa_pipe_virgl \
+	libmesa_winsys_virgl
+LOCAL_C_INCLUDES += \
+    external/mesa/src/gallium/drivers/svga/include \
+	external/mesa/src/gallium/drivers/virgl/include
 endif
 
 LOCAL_STATIC_LIBRARIES += \

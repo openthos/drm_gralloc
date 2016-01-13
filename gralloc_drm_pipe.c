@@ -26,8 +26,11 @@
 #include <cutils/log.h>
 #include <errno.h>
 
+//#ifdef ENABLE_PIPE_VMWGFX
 #include <svga_types.h>
 #include <svga3d_types.h>
+//#endif
+
 #include <pipe/p_screen.h>
 #include <pipe/p_context.h>
 #include <state_tracker/drm_driver.h>
@@ -232,7 +235,7 @@ static int pipe_map(struct gralloc_drm_drv_t *drv,
 
 	/* need a context to get transfer */
 	if (!pm->context) {
-		pm->context = pm->screen->context_create(pm->screen, NULL);
+		pm->context = pm->screen->context_create(pm->screen, NULL, 0);
 		if (!pm->context) {
 			ALOGE("failed to create pipe context");
 			err = -ENOMEM;
@@ -318,7 +321,7 @@ static void pipe_blit(struct gralloc_drm_drv_t *drv,
 
 	/* need a context for copying */
 	if (!pm->context) {
-		pm->context = pm->screen->context_create(pm->screen, NULL);
+		pm->context = pm->screen->context_create(pm->screen, NULL, 0);
 		if (!pm->context) {
 			ALOGE("failed to create pipe context");
 			pthread_mutex_unlock(&pm->mutex);
@@ -382,6 +385,9 @@ static void pipe_destroy(struct gralloc_drm_drv_t *drv)
 /* for vmwgfx */
 #include "svga/drm/svga_drm_public.h"
 #include "svga/svga_public.h"
+/* for virgl */
+#include "virgl/drm/virgl_drm_public.h"
+#include "virgl/virgl_public.h"
 /* for debug */
 #include "target-helpers/inline_debug_helper.h"
 
@@ -426,6 +432,16 @@ static int pipe_init_screen(struct pipe_manager *pm)
 	}
 	else
 #endif
+#ifdef ENABLE_PIPE_VIRGL
+    ALOGI("create pipe screen for %s", pm->driver);
+	if (strcmp(pm->driver, "virtio_gpu") == 0) {
+		struct virgl_winsys *vws =
+			virgl_drm_winsys_create(pm->fd);
+
+		screen = vws ? virgl_create_screen(vws) : NULL;
+	}
+	else
+#endif
 		screen = NULL;
 
 	if (!screen) {
@@ -445,6 +461,8 @@ static int pipe_get_pci_id(struct pipe_manager *pm,
 		const char *name, int *vendor, int *device)
 {
 	int err = -EINVAL;
+	
+	ALOGI("pipe_get_pci_id:: STEP 1 for %s", name);
 
 	if (strcmp(name, "i915") == 0) {
 		struct drm_i915_getparam gp;
@@ -477,7 +495,15 @@ static int pipe_get_pci_id(struct pipe_manager *pm,
 		*device = 0x0405;
 		err = 0;
 	}
+	else if (strcmp(name, "virtio_gpu") == 0) {
+	    ALOGI("pipe_get_pci_id:: virtio_gpu for %s", name);
+		*vendor = 0x1af4;
+		/* assume VIRTIO_GPU */
+		*device = 0x1010;
+		err = 0;
+	}
 	else {
+	    ALOGI("pipe_get_pci_id:: ERROR for %s", name);
 		err = -EINVAL;
 	}
 
@@ -491,8 +517,9 @@ static int pipe_find_driver(struct pipe_manager *pm, const char *name)
 	int vendor, device;
 	int err;
 	const char *driver;
-
+    ALOGI("pipe_find_driver:: for %s", name);
 	err = pipe_get_pci_id(pm, name, &vendor, &device);
+	ALOGI("pipe_find_driver:: end for %s, vendor %x, device %x, err %d", name,vendor, device, err);
 	if (!err) {
 		int idx;
 
@@ -515,6 +542,15 @@ static int pipe_find_driver(struct pipe_manager *pm, const char *name)
 		}
 
 		driver = driver_map[idx].driver;
+		
+        if ( driver ) {
+		  ALOGI("pipe_get_pci_id:: STEP 1 for idx %d,  driver %s", idx, name);
+		} else {
+		  ALOGI("pipe_get_pci_id:: STEP 1 ERROR for idx %d,  driver %s, vendor %x, device %x", idx, driver_map[idx].driver, driver_map[idx].vendor_id, device);
+		  ALOGI("pipe_get_pci_id:: STEP 1 ERROR for driver_map[%d].num_chips_ids %d", idx, driver_map[idx].num_chips_ids);
+		  ALOGI("pipe_get_pci_id:: STEP 1 ERROR for driver_map[%d].chip_ids[0] %d", idx, driver_map[idx].chip_ids[0]);
+		}
+				
 		err = (driver) ? 0 : -ENODEV;
 	}
 	else {
@@ -524,6 +560,11 @@ static int pipe_find_driver(struct pipe_manager *pm, const char *name)
 		}
 		if (strcmp(name, "msm") == 0) {
 			driver = "msm";
+			err = 0;
+		}
+		if (strcmp(name, "virtio_gpu") == 0) {
+		    ALOGI("pipe_get_pci_id:: STEP 2 for %s", name);
+			driver = "virtio_gpu";
 			err = 0;
 		}
 	}
